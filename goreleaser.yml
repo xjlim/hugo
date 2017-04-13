@@ -1,0 +1,29 @@
+build:
+  main: main.go
+  binary: hugo
+  goos:
+    - windows
+    - darwin
+    - linux
+  goarch:
+    - amd64
+    - 386
+# Archive customization
+archive:
+  format: tar.gz
+  name_template: "{{.Binary}}_{{.Version}}_{{.Os}}_{{.Arch}}"
+  replacements:
+    amd64: 64-bit
+    386: 32-bit
+    darwin: macOS
+    linux: Linux
+    windows: Windows
+  files:
+    - README.md
+    - LICENSE.md
+release:
+  # Repo in which the release will be created.
+  # Default is extracted from the origin remote URL.
+  github:
+    owner: bep
+    name: hugo
