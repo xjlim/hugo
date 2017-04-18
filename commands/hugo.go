@@ -192,6 +192,7 @@ func AddCommands() {
 	HugoCmd.AddCommand(listCmd)
 	HugoCmd.AddCommand(undraftCmd)
 	HugoCmd.AddCommand(importCmd)
+	HugoCmd.AddCommand(createReleaser().cmd)
 
 	HugoCmd.AddCommand(genCmd)
 	genCmd.AddCommand(genautocompleteCmd)
