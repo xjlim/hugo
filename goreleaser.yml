@@ -1,13 +1,11 @@
 build:
   main: main.go
   binary: hugo
+  ldflags_template: -s -w -X hugolib.BuildDate={{.Date}}
   goos:
-    - windows
     - darwin
-    - linux
   goarch:
     - amd64
-    - 386
 # Archive customization
 archive:
   format: tar.gz

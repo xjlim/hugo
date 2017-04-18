@@ -18,6 +18,7 @@ package release
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -39,6 +40,10 @@ func New(patch int) *ReleaseHandler {
 }
 
 func (r *ReleaseHandler) Run() error {
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		return errors.New("GITHUB_TOKEN not set, needed by goreleaser")
+	}
+
 	var (
 		newVersion   helpers.HugoVersion
 		finalVersion = helpers.CurrentHugoVersion
@@ -70,6 +75,7 @@ func (r *ReleaseHandler) Run() error {
 		// Plan:
 		// Release notes?
 		// OK Adapt version numbers
+		// TODO(bep) push before release?
 		if err := bumpVersions(newVersion); err != nil {
 			return err
 		}
@@ -80,6 +86,12 @@ func (r *ReleaseHandler) Run() error {
 
 		if _, err := git("tag", "-a", tag, "-m", fmt.Sprintf("release: %s", newVersion)); err != nil {
 			return err
+		}
+
+		if confirm("Release to GitHub") {
+			if err := release(); err != nil {
+				return err
+			}
 		}
 
 		if err := bumpVersions(finalVersion); err != nil {
@@ -124,8 +136,17 @@ func confirm(s string) bool {
 	return false
 }
 
+func release() error {
+	cmd := exec.Command("goreleaser")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("goreleaser failed: %q: %q", err, out)
+	}
+	return nil
+}
+
 func git(args ...string) (string, error) {
-	var cmd = exec.Command("git", args...)
+	cmd := exec.Command("git", args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("git failed: %q: %q", err, out)
