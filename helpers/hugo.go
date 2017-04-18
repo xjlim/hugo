@@ -48,6 +48,11 @@ func (v HugoVersion) Next() HugoVersion {
 	return HugoVersion{Number: v.Number + 0.01}
 }
 
+// Pre returns the previous Hugo release version.
+func (v HugoVersion) Prev() HugoVersion {
+	return HugoVersion{Number: v.Number - 0.01}
+}
+
 // NextPatchLevel returns the next patch/bugfix Hugo version.
 // This will be a patch increment on the previous Hugo version.
 func (v HugoVersion) NextPatchLevel(level int) HugoVersion {
