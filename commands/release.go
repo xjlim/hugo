@@ -14,15 +14,15 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/hugo/release"
 )
 
 type releaser struct {
 	cmd *cobra.Command
 
-	patchRelease bool
+	// Will be zero for main releases.
+	patchLevel int
 }
 
 func createReleaser() *releaser {
@@ -38,18 +38,11 @@ func createReleaser() *releaser {
 		return r.release()
 	}
 
-	r.cmd.PersistentFlags().BoolVarP(&r.patchRelease, "patch", "p", false, "Release a patch/bug fix")
+	r.cmd.PersistentFlags().IntVarP(&r.patchLevel, "patch", "p", 0, "Patch level, defaults to 0 for main releases")
 
 	return r
 }
 
 func (r *releaser) release() error {
-	if r.patchRelease {
-		fmt.Println("New Hugo patch/bug fix release ...")
-	} else {
-		fmt.Println("New Hugo main release ...")
-	}
-
-	return nil
-
+	return release.New(r.patchLevel).Run()
 }
