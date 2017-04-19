@@ -23,9 +23,13 @@ type releaser struct {
 
 	// Will be zero for main releases.
 	patchLevel int
+
+	step int
 }
 
 func createReleaser() *releaser {
+	// Note: This is a command only meant for internal use and must be run
+	// via "go run main.go release" on the actual code base that is in the release.
 	r := &releaser{
 		cmd: &cobra.Command{
 			Use:    "release",
@@ -39,10 +43,11 @@ func createReleaser() *releaser {
 	}
 
 	r.cmd.PersistentFlags().IntVarP(&r.patchLevel, "patch", "p", 0, "Patch level, defaults to 0 for main releases")
+	r.cmd.PersistentFlags().IntVarP(&r.step, "step", "s", -1, "Release step, defaults to -1 for all steps.")
 
 	return r
 }
 
 func (r *releaser) release() error {
-	return release.New(r.patchLevel).Run()
+	return release.New(r.patchLevel, r.step).Run()
 }

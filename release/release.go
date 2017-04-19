@@ -33,29 +33,56 @@ import (
 
 type ReleaseHandler struct {
 	patch int
+	step  int
 }
 
-func New(patch int) *ReleaseHandler {
-	return &ReleaseHandler{patch: patch}
+func (r ReleaseHandler) shouldRelease() bool {
+	return r.step < 1 || r.shouldContinue()
+}
+
+func (r ReleaseHandler) shouldContinue() bool {
+	return r.step == 2
+}
+
+func (r ReleaseHandler) shouldPrepare() bool {
+	return r.step < 1 || r.step == 1
+}
+
+func (r ReleaseHandler) calculateVersions(current helpers.HugoVersion) (helpers.HugoVersion, helpers.HugoVersion) {
+	var (
+		newVersion   = current
+		finalVersion = current
+	)
+
+	newVersion.Suffix = ""
+
+	if r.shouldContinue() {
+		// The version in the current code base is in the state we want for
+		// the release.
+		if r.patch == 0 {
+			finalVersion = newVersion.Next()
+		}
+	} else if r.patch > 0 {
+		newVersion = helpers.CurrentHugoVersion.NextPatchLevel(r.patch)
+	} else {
+		finalVersion = newVersion.Next()
+	}
+
+	finalVersion.Suffix = "-DEV"
+
+	return newVersion, finalVersion
+}
+
+func New(patch, step int) *ReleaseHandler {
+	return &ReleaseHandler{patch: patch, step: step}
 }
 
 func (r *ReleaseHandler) Run() error {
-	if os.Getenv("GITHUB_TOKEN") == "" {
+	if r.shouldRelease() && os.Getenv("GITHUB_TOKEN") == "" {
 		return errors.New("GITHUB_TOKEN not set, needed by goreleaser")
 	}
 
-	var (
-		newVersion   helpers.HugoVersion
-		finalVersion = helpers.CurrentHugoVersion
-	)
-
-	if r.patch > 0 {
-		newVersion = helpers.CurrentHugoVersion.NextPatchLevel(r.patch)
-	} else {
-		newVersion = helpers.CurrentHugoVersion.Next()
-		finalVersion = newVersion
-		finalVersion.Suffix = "-DEV"
-	}
+	newVersion, finalVersion := r.calculateVersions(helpers.CurrentHugoVersion)
 
 	if true || confirm(fmt.Sprint("Start release of ", newVersion, "?")) {
 
@@ -72,16 +99,19 @@ func (r *ReleaseHandler) Run() error {
 			return fmt.Errorf("Tag %q already exists", tag)
 		}
 
-		// Plan:
-		// Release notes?
-		// OK Adapt version numbers
-		// TODO(bep) push before release?
-		if err := bumpVersions(newVersion); err != nil {
-			return err
+		if r.shouldPrepare() {
+			if err := bumpVersions(newVersion); err != nil {
+				return err
+			}
+
+			if _, err := git("commit", "-a", "-m", fmt.Sprintf("release: Bump versions for release of %s", newVersion)); err != nil {
+				return err
+			}
 		}
 
-		if _, err := git("commit", "-a", "-m", fmt.Sprintf("release: Bump versions for release of %s", newVersion)); err != nil {
-			return err
+		if !r.shouldRelease() {
+			fmt.Println("Skip release ... Use --state=2 to continue.")
+			return nil
 		}
 
 		if _, err := git("tag", "-a", tag, "-m", fmt.Sprintf("release: %s", newVersion)); err != nil {
@@ -103,13 +133,6 @@ func (r *ReleaseHandler) Run() error {
 		}
 
 	}
-
-	// Commit
-	// Tag
-	//
-	// Run goreleaser
-	// Prepare version numbers for next release.
-	// Commit.
 
 	return nil
 }
@@ -138,9 +161,11 @@ func confirm(s string) bool {
 
 func release() error {
 	cmd := exec.Command("goreleaser")
-	out, err := cmd.CombinedOutput()
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("goreleaser failed: %q: %q", err, out)
+		return fmt.Errorf("goreleaser failed: %s", err)
 	}
 	return nil
 }
