@@ -6,7 +6,8 @@ import (
 	"net/http"
 )
 
-const gitHubCommitsApi = "https://api.github.com/repos/spf13/hugo/commits/%s"
+// TODO(bep) => spf13
+const gitHubCommitsApi = "https://api.github.com/repos/bep/hugo/commits/%s"
 
 type gitHubCommit struct {
 	Author  gitHubAuthor `json:"author"`

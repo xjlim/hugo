@@ -18,6 +18,7 @@ package release
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"text/template"
 )
 
@@ -62,4 +63,19 @@ func writeReleaseNotes(infos gitInfos, to io.Writer) error {
 
 	return nil
 
+}
+
+func writeReleaseNotesToTmpFile(infos gitInfos) (string, error) {
+	f, err := ioutil.TempFile("", "hugorelease")
+	if err != nil {
+		return "", err
+	}
+
+	defer f.Close()
+
+	if err := writeReleaseNotes(infos, f); err != nil {
+		return "", err
+	}
+
+	return f.Name(), nil
 }

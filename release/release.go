@@ -99,15 +99,6 @@ func (r *ReleaseHandler) Run() error {
 		}
 
 		if r.shouldPrepare() {
-			log, err := gitLog()
-			if err != nil {
-				return err
-			}
-			fmt.Println("LOG:\n", log)
-
-			if true {
-				return nil
-			}
 			if err := bumpVersions(newVersion); err != nil {
 				return err
 			}
@@ -122,12 +113,22 @@ func (r *ReleaseHandler) Run() error {
 			return nil
 		}
 
+		log, err := getGitInfos()
+		if err != nil {
+			return err
+		}
+
+		releaseNotesFile, err := writeReleaseNotesToTmpFile(log)
+		if err != nil {
+			return err
+		}
+
 		if _, err := git("tag", "-a", tag, "-m", fmt.Sprintf("release: %s", newVersion)); err != nil {
 			return err
 		}
 
 		if confirm("Release to GitHub") {
-			if err := release(); err != nil {
+			if err := release(releaseNotesFile); err != nil {
 				return err
 			}
 		}
@@ -167,8 +168,8 @@ func confirm(s string) bool {
 	return false
 }
 
-func release() error {
-	cmd := exec.Command("goreleaser")
+func release(releaseNotesFile string) error {
+	cmd := exec.Command("goreleaser", "--release-notes", releaseNotesFile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
