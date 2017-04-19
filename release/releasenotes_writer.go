@@ -1,0 +1,65 @@
+// Copyright 2017-present The Hugo Authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Package release implements a set of utilities and a wrapper around Goreleaser
+// to help automate the Hugo release process.
+package release
+
+import (
+	"fmt"
+	"io"
+	"text/template"
+)
+
+const (
+	issueLinkTemplate            = "[#%d](https://github.com/spf13/hugo/issues/%d)"
+	linkTemplate                 = "[%s](%s)"
+	releaseNotesMarkdownTemplate = `
+# Changes
+
+{{ range . }}
+{{- if .GitHubCommit -}}
+* {{ . | commitURL }} {{ .Subject }} {{ . | authorURL }} {{ range .Issues }}{{. | issue }} {{ end }}
+{{ else }}
+* {{ .Hash}} {{ .Subject }} {{ range .Issues }}#{{ . }} {{ end }}
+{{ end -}}
+{{- end -}}
+`
+)
+
+var templateFuncs = template.FuncMap{
+	"issue": func(id int) string {
+		return fmt.Sprintf(issueLinkTemplate, id, id)
+	},
+	"commitURL": func(info gitInfo) string {
+		return fmt.Sprintf(linkTemplate, info.Hash, info.GitHubCommit.HtmlURL)
+	},
+	"authorURL": func(info gitInfo) string {
+		return fmt.Sprintf(linkTemplate, "@"+info.GitHubCommit.Author.Login, info.GitHubCommit.Author.HtmlURL)
+	},
+}
+
+func writeReleaseNotes(infos gitInfos, to io.Writer) error {
+	tmpl, err := template.New("").Funcs(templateFuncs).Parse(releaseNotesMarkdownTemplate)
+	if err != nil {
+		return err
+	}
+
+	err = tmpl.Execute(to, infos)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}

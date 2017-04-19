@@ -11,9 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package commands defines and implements command-line commands and flags
-// used by Hugo. Commands and flags are implemented using Cobra.
-
+// Package release implements a set of utilities and a wrapper around Goreleaser
+// to help automate the Hugo release process.
 package release
 
 import (
@@ -100,6 +99,15 @@ func (r *ReleaseHandler) Run() error {
 		}
 
 		if r.shouldPrepare() {
+			log, err := gitLog()
+			if err != nil {
+				return err
+			}
+			fmt.Println("LOG:\n", log)
+
+			if true {
+				return nil
+			}
 			if err := bumpVersions(newVersion); err != nil {
 				return err
 			}
@@ -168,15 +176,6 @@ func release() error {
 		return fmt.Errorf("goreleaser failed: %s", err)
 	}
 	return nil
-}
-
-func git(args ...string) (string, error) {
-	cmd := exec.Command("git", args...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("git failed: %q: %q", err, out)
-	}
-	return string(out), nil
 }
 
 func bumpVersions(ver helpers.HugoVersion) error {
