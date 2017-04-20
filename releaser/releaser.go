@@ -79,8 +79,8 @@ func New(patch, step int) *ReleaseHandler {
 }
 
 func (r *ReleaseHandler) Run() error {
-	if r.shouldRelease() && os.Getenv("GITHUB_TOKEN") == "" {
-		return errors.New("GITHUB_TOKEN not set, needed by goreleaser")
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		return errors.New("GITHUB_TOKEN not set, create one here with the repo scope selected: https://github.com/settings/tokens/new")
 	}
 
 	newVersion, finalVersion := r.calculateVersions(helpers.CurrentHugoVersion)

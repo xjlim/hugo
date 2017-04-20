@@ -25,12 +25,6 @@ import (
 	"time"
 )
 
-// TODO(bep)
-// Work flow:
-// Create draft release notes in docs/temp/<tag>-release-notes.md (folder)
-// Commit
-//
-
 const (
 	issueLinkTemplate            = "[#%d](https://github.com/spf13/hugo/issues/%d)"
 	linkTemplate                 = "[%s](%s)"

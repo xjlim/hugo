@@ -21,7 +21,7 @@ import (
 )
 
 func TestGitHubLookupCommit(t *testing.T) {
-	commit, err := fetchCommit("86a97dbd")
+	commit, err := fetchCommit("793554108763c0984f1a1b1a6ee5744b560d78d0")
 	require.NoError(t, err)
 	fmt.Println(commit)
 }

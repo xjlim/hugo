@@ -3,11 +3,12 @@ package releaser
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
 )
 
-// TODO(bep) => spf13
-const gitHubCommitsApi = "https://api.github.com/repos/bep/hugo/commits/%s"
+var gitHubCommitsApi = "https://api.github.com/repos/spf13/hugo/commits/%s"
 
 type gitHubCommit struct {
 	Author  gitHubAuthor `json:"author"`
@@ -26,11 +27,26 @@ func fetchCommit(ref string) (gitHubCommit, error) {
 
 	u := fmt.Sprintf(gitHubCommitsApi, ref)
 
-	resp, err := http.Get(u)
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return commit, err
+	}
+	gitHubToken := os.Getenv("GITHUB_TOKEN")
+	if gitHubToken != "" {
+		req.Header.Add("Authorization", "token "+gitHubToken)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return commit, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		b, _ := ioutil.ReadAll(resp.Body)
+		return commit, fmt.Errorf("GitHub lookup failed: %s", string(b))
+
+	}
 
 	err = json.NewDecoder(resp.Body).Decode(&commit)
 	if err != nil {
