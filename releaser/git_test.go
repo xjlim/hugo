@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package release
+package releaser
 
 import (
 	"testing"
@@ -20,7 +20,7 @@ import (
 )
 
 func TestGitInfos(t *testing.T) {
-	infos, err := getGitInfos()
+	infos, err := getGitInfos(false)
 
 	require.NoError(t, err)
 	require.True(t, len(infos) > 0)

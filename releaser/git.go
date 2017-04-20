@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package release
+package releaser
 
 import (
 	"fmt"
@@ -60,7 +60,7 @@ func git(args ...string) (string, error) {
 	return string(out), nil
 }
 
-func getGitInfos() (gitInfos, error) {
+func getGitInfos(remote bool) (gitInfos, error) {
 	var g gitInfos
 
 	log, err := gitLog()
@@ -79,9 +79,11 @@ func getGitInfos() (gitInfos, error) {
 			Subject: items[2],
 			Body:    items[3],
 		}
-		gc, err := fetchCommit(gi.Hash)
-		if err == nil {
-			gi.GitHubCommit = &gc
+		if remote {
+			gc, err := fetchCommit(gi.Hash)
+			if err == nil {
+				gi.GitHubCommit = &gc
+			}
 		}
 		g = append(g, gi)
 	}

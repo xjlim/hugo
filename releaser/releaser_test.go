@@ -14,7 +14,7 @@
 // Package commands defines and implements command-line commands and flags
 // used by Hugo. Commands and flags are implemented using Cobra.
 
-package release
+package releaser
 
 import (
 	"testing"

@@ -11,28 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package commands defines and implements command-line commands and flags
-// used by Hugo. Commands and flags are implemented using Cobra.
-
-package release
+package releaser
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 
-	//	"github.com/spf13/hugo/helpers"
 	"github.com/stretchr/testify/require"
 )
 
-func TestReleaseNotesWriter(t *testing.T) {
-
-	var b bytes.Buffer
-
-	infos, err := getGitInfos()
+func TestGitHubLookupCommit(t *testing.T) {
+	commit, err := fetchCommit("86a97dbd")
 	require.NoError(t, err)
-
-	require.NoError(t, writeReleaseNotes(infos, &b))
-
-	fmt.Println(">>>", b.String())
+	fmt.Println(commit)
 }

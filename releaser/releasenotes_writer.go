@@ -13,7 +13,7 @@
 
 // Package release implements a set of utilities and a wrapper around Goreleaser
 // to help automate the Hugo release process.
-package release
+package releaser
 
 import (
 	"fmt"
@@ -21,6 +21,12 @@ import (
 	"io/ioutil"
 	"text/template"
 )
+
+// TODO(bep)
+// Work flow:
+// Create draft release notes in docs/temp/<tag>-release-notes.md (folder)
+// Commit
+//
 
 const (
 	issueLinkTemplate            = "[#%d](https://github.com/spf13/hugo/issues/%d)"
@@ -31,7 +37,7 @@ const (
 {{ range . }}
 {{- if .GitHubCommit -}}
 * {{ . | commitURL }} {{ .Subject }} {{ . | authorURL }} {{ range .Issues }}{{. | issue }} {{ end }}
-{{ else }}
+{{ else -}}
 * {{ .Hash}} {{ .Subject }} {{ range .Issues }}#{{ . }} {{ end }}
 {{ end -}}
 {{- end -}}

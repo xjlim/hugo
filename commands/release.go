@@ -15,10 +15,10 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/spf13/hugo/release"
+	"github.com/spf13/hugo/releaser"
 )
 
-type releaser struct {
+type releaseCommandeer struct {
 	cmd *cobra.Command
 
 	// Will be zero for main releases.
@@ -27,10 +27,10 @@ type releaser struct {
 	step int
 }
 
-func createReleaser() *releaser {
+func createReleaser() *releaseCommandeer {
 	// Note: This is a command only meant for internal use and must be run
 	// via "go run main.go release" on the actual code base that is in the release.
-	r := &releaser{
+	r := &releaseCommandeer{
 		cmd: &cobra.Command{
 			Use:    "release",
 			Short:  "Release a new version of Hugo.",
@@ -48,6 +48,6 @@ func createReleaser() *releaser {
 	return r
 }
 
-func (r *releaser) release() error {
-	return release.New(r.patchLevel, r.step).Run()
+func (r *releaseCommandeer) release() error {
+	return releaser.New(r.patchLevel, r.step).Run()
 }

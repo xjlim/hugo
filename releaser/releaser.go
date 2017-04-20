@@ -11,9 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package release implements a set of utilities and a wrapper around Goreleaser
+// Package releaser implements a set of utilities and a wrapper around Goreleaser
 // to help automate the Hugo release process.
-package release
+package releaser
 
 import (
 	"bufio"
@@ -29,6 +29,8 @@ import (
 
 	"github.com/spf13/hugo/helpers"
 )
+
+const commitPrefix = "relaser:"
 
 type ReleaseHandler struct {
 	patch int
@@ -103,7 +105,7 @@ func (r *ReleaseHandler) Run() error {
 				return err
 			}
 
-			if _, err := git("commit", "-a", "-m", fmt.Sprintf("release: Bump versions for release of %s", newVersion)); err != nil {
+			if _, err := git("commit", "-a", "-m", fmt.Sprintf("%s Bump versions for release of %s", commitPrefix, newVersion)); err != nil {
 				return err
 			}
 		}
@@ -113,7 +115,7 @@ func (r *ReleaseHandler) Run() error {
 			return nil
 		}
 
-		log, err := getGitInfos()
+		log, err := getGitInfos(true)
 		if err != nil {
 			return err
 		}
@@ -123,7 +125,7 @@ func (r *ReleaseHandler) Run() error {
 			return err
 		}
 
-		if _, err := git("tag", "-a", tag, "-m", fmt.Sprintf("release: %s", newVersion)); err != nil {
+		if _, err := git("tag", "-a", tag, "-m", fmt.Sprintf("%s %s", commitPrefix, newVersion)); err != nil {
 			return err
 		}
 
@@ -137,7 +139,7 @@ func (r *ReleaseHandler) Run() error {
 			return err
 		}
 
-		if _, err := git("commit", "-a", "-m", fmt.Sprintf("release: Prepare repository for %s", finalVersion)); err != nil {
+		if _, err := git("commit", "-a", "-m", fmt.Sprintf("%s Prepare repository for %s", commitPrefix, finalVersion)); err != nil {
 			return err
 		}
 
