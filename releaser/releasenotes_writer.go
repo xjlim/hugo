@@ -32,15 +32,49 @@ const (
 	issueLinkTemplate            = "[#%d](https://github.com/spf13/hugo/issues/%d)"
 	linkTemplate                 = "[%s](%s)"
 	releaseNotesMarkdownTemplate = `
-# Changes
+# Enhancements
+{{ template "change-headers"  .Enhancements -}}
+# Fixes
+{{ template "change-headers"  .Fixes -}}
 
+{{ define "change-headers" }}
+{{ $tmplChanges := index . "templateChanges" -}}
+{{- $outChanges := index . "outChanges" -}}
+{{- $coreChanges := index . "coreChanges" -}}
+{{- $docsChanges := index . "docsChanges" -}}
+{{- $otherChanges := index . "otherChanges" -}}
+{{- with $tmplChanges -}}
+## Templates
+{{ template "change-section" . }}
+{{- end -}}
+{{- with $outChanges -}}
+## Output
+{{- template "change-section"  . }}
+{{- end -}}
+{{- with $coreChanges -}}
+## Core
+{{ template "change-section" . }}
+{{- end -}}
+{{- with $docsChanges -}}
+## Docs
+{{- template "change-section"  . }}
+{{- end -}}
+{{- with $otherChanges -}}
+## Other
+{{ template "change-section"  . }}
+{{- end -}}
+{{ end }}
+
+
+{{ define "change-section" }}
 {{ range . }}
 {{- if .GitHubCommit -}}
-* {{ . | commitURL }} {{ .Subject }} {{ . | authorURL }} {{ range .Issues }}{{. | issue }} {{ end }}
+* {{ . | commitURL }} {{ .Subject }} {{ . | authorURL }} {{ range .Issues }}{{ . | issue }} {{ end }}
 {{ else -}}
 * {{ .Hash}} {{ .Subject }} {{ range .Issues }}#{{ . }} {{ end }}
 {{ end -}}
-{{- end -}}
+{{- end }}
+{{ end }}
 `
 )
 
@@ -57,12 +91,14 @@ var templateFuncs = template.FuncMap{
 }
 
 func writeReleaseNotes(infos gitInfos, to io.Writer) error {
+	changes := gitInfosToChangeLog(infos)
+
 	tmpl, err := template.New("").Funcs(templateFuncs).Parse(releaseNotesMarkdownTemplate)
 	if err != nil {
 		return err
 	}
 
-	err = tmpl.Execute(to, infos)
+	err = tmpl.Execute(to, changes)
 	if err != nil {
 		return err
 	}
