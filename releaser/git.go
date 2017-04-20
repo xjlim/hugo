@@ -83,6 +83,12 @@ func gitInfosToChangeLog(infos gitInfos) changeLog {
 			category = outChanges
 		}
 
+		// Trim package prefix.
+		colonIdx := strings.Index(info.Subject, ":")
+		if colonIdx != -1 && colonIdx < (len(info.Subject)/2) {
+			info.Subject = info.Subject[colonIdx+1:]
+		}
+
 		log.addGitInfo(isFix, info, category)
 	}
 

@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+	"time"
 )
 
 // TODO(bep)
@@ -148,5 +149,40 @@ func writeReleaseNotesToDocsTemp(tag string, infos gitInfos) (string, error) {
 	}
 
 	return f.Name(), nil
+
+}
+
+func writeReleaseNotesToDocs(title, sourceFilename string) (string, error) {
+	targetFilename := filepath.Base(sourceFilename)
+	contentDir := hugoFilepath("docs/content/release-notes")
+	targetFullFilename := filepath.Join(contentDir, targetFilename)
+	os.Mkdir(contentDir, os.ModePerm)
+
+	b, err := ioutil.ReadFile(sourceFilename)
+	if err != nil {
+		return "", err
+	}
+
+	f, err := os.Create(targetFullFilename)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	if _, err := f.WriteString(fmt.Sprintf(`
+---
+date: %s
+title: %s
+---
+
+	`, time.Now().Format("2006-02-06"), title)); err != nil {
+		return "", err
+	}
+
+	if _, err := f.Write(b); err != nil {
+		return "", err
+	}
+
+	return targetFullFilename, nil
 
 }

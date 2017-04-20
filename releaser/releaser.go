@@ -30,7 +30,7 @@ import (
 	"github.com/spf13/hugo/helpers"
 )
 
-const commitPrefix = "relaser:"
+const commitPrefix = "releaser:"
 
 type ReleaseHandler struct {
 	patch int
@@ -136,12 +136,28 @@ func (r *ReleaseHandler) Run() error {
 			return nil
 		}
 
+		releaseNotesFile := getRelaseNotesDocsTempFilename(tag)
+
+		// Write the release notes to the docs site as well.
+		docFile, err := writeReleaseNotesToDocs(tag, releaseNotesFile)
+		if err != nil {
+			return err
+		}
+
+		if _, err := git("add", docFile); err != nil {
+			return err
+		}
+		if _, err := git("commit", "-m", fmt.Sprintf("%s Add relase notes to /docs for release of %s", commitPrefix, newVersion)); err != nil {
+			return err
+		}
+
 		if _, err := git("tag", "-a", tag, "-m", fmt.Sprintf("%s %s", commitPrefix, newVersion)); err != nil {
 			return err
 		}
 
 		if confirm("Release to GitHub") {
-			if err := release(getRelaseNotesDocsTempFilename(tag)); err != nil {
+			// TODO(bep) release draft flag
+			if err := release(releaseNotesFile); err != nil {
 				return err
 			}
 		}
