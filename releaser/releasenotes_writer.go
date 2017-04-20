@@ -72,9 +72,9 @@ const (
 {{ define "change-section" }}
 {{ range . }}
 {{- if .GitHubCommit -}}
-* {{ . | commitURL }} {{ .Subject }} {{ . | authorURL }} {{ range .Issues }}{{ . | issue }} {{ end }}
+* {{ .Subject }} {{ . | commitURL }} {{ . | authorURL }} {{ range .Issues }}{{ . | issue }} {{ end }}
 {{ else -}}
-* {{ .Hash}} {{ .Subject }} {{ range .Issues }}#{{ . }} {{ end }}
+* {{ .Subject }} {{ range .Issues }}{{ . | issue }} {{ end }}
 {{ end -}}
 {{- end }}
 {{ end }}
@@ -86,9 +86,15 @@ var templateFuncs = template.FuncMap{
 		return fmt.Sprintf(issueLinkTemplate, id, id)
 	},
 	"commitURL": func(info gitInfo) string {
+		if info.GitHubCommit.HtmlURL == "" {
+			return ""
+		}
 		return fmt.Sprintf(linkTemplate, info.Hash, info.GitHubCommit.HtmlURL)
 	},
 	"authorURL": func(info gitInfo) string {
+		if info.GitHubCommit.Author.Login == "" {
+			return ""
+		}
 		return fmt.Sprintf(linkTemplate, "@"+info.GitHubCommit.Author.Login, info.GitHubCommit.Author.HtmlURL)
 	},
 }

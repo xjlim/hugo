@@ -28,7 +28,7 @@ func TestReleaseNotesWriter(t *testing.T) {
 
 	var b bytes.Buffer
 
-	infos, err := getGitInfosBefore("v0.20", false)
+	infos, err := getGitInfosBefore("v0.20", true)
 	require.NoError(t, err)
 
 	require.NoError(t, writeReleaseNotes(infos, &b))
