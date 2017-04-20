@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"testing"
 
-	//	"github.com/spf13/hugo/helpers"
 	"github.com/stretchr/testify/require"
 )
 

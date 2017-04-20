@@ -100,12 +100,33 @@ func (r *ReleaseHandler) Run() error {
 			return fmt.Errorf("Tag %q already exists", tag)
 		}
 
+		var gitCommits gitInfos
+
+		if r.shouldPrepare() || r.shouldRelease() {
+			gitCommits, err = getGitInfos(true)
+			if err != nil {
+				return err
+			}
+		}
+
 		if r.shouldPrepare() {
 			if err := bumpVersions(newVersion); err != nil {
 				return err
 			}
 
 			if _, err := git("commit", "-a", "-m", fmt.Sprintf("%s Bump versions for release of %s", commitPrefix, newVersion)); err != nil {
+				return err
+			}
+
+			releaseNotesFile, err := writeReleaseNotesToDocsTemp(tag, gitCommits)
+			if err != nil {
+				return err
+			}
+
+			if _, err := git("add", releaseNotesFile); err != nil {
+				return err
+			}
+			if _, err := git("commit", "-m", fmt.Sprintf("%s Add relase notes draft for release of %s", commitPrefix, newVersion)); err != nil {
 				return err
 			}
 		}
@@ -115,22 +136,12 @@ func (r *ReleaseHandler) Run() error {
 			return nil
 		}
 
-		log, err := getGitInfos(true)
-		if err != nil {
-			return err
-		}
-
-		releaseNotesFile, err := writeReleaseNotesToTmpFile(log)
-		if err != nil {
-			return err
-		}
-
 		if _, err := git("tag", "-a", tag, "-m", fmt.Sprintf("%s %s", commitPrefix, newVersion)); err != nil {
 			return err
 		}
 
 		if confirm("Release to GitHub") {
-			if err := release(releaseNotesFile); err != nil {
+			if err := release(getRelaseNotesDocsTempFilename(tag)); err != nil {
 				return err
 			}
 		}

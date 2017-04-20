@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"text/template"
 )
 
@@ -120,4 +122,31 @@ func writeReleaseNotesToTmpFile(infos gitInfos) (string, error) {
 	}
 
 	return f.Name(), nil
+}
+
+func getRelaseNotesDocsTempDirAndName(tag string) (string, string) {
+	return hugoFilepath("docs/temp"), fmt.Sprintf("%s-relnotes.md", tag)
+}
+
+func getRelaseNotesDocsTempFilename(tag string) string {
+	return filepath.Join(getRelaseNotesDocsTempDirAndName(tag))
+}
+
+func writeReleaseNotesToDocsTemp(tag string, infos gitInfos) (string, error) {
+	docsTempPath, name := getRelaseNotesDocsTempDirAndName(tag)
+	os.Mkdir(docsTempPath, os.ModePerm)
+
+	f, err := os.Create(filepath.Join(docsTempPath, name))
+	if err != nil {
+		return "", err
+	}
+
+	defer f.Close()
+
+	if err := writeReleaseNotes(infos, f); err != nil {
+		return "", err
+	}
+
+	return f.Name(), nil
+
 }
